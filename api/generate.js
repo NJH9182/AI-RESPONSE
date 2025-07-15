@@ -1,11 +1,19 @@
-// api/generate.js
-
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { businessName, businessType, ownerName, responseStyle, businessInfo, customerName, reviewText, reviewPlatform, rating } = req.body;
+    const {
+        businessName,
+        businessType,
+        ownerName,
+        responseStyle,
+        businessInfo,
+        customerName,
+        reviewText,
+        reviewPlatform,
+        rating
+    } = req.body;
 
     const prompt = `
 You are an AI assistant writing review responses for a ${businessType} called "${businessName}".
@@ -19,7 +27,7 @@ Sign off as: ${ownerName || 'Management'} from ${businessName}.
 `;
 
     try {
-        const completion = await fetch('https://api.openai.com/v1/chat/completions', {
+        const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -32,12 +40,29 @@ Sign off as: ${ownerName || 'Management'} from ${businessName}.
             })
         });
 
-        const data = await completion.json();
-        const message = data.choices?.[0]?.message?.content || 'AI response not available.';
-        res.status(200).json({ response: message });
+        const data = await openaiResponse.json();
+
+        if (!openaiResponse.ok) {
+            console.error('OpenAI Error:', data);
+            return res.status(500).json({
+                response: `OpenAI Error: ${data.error?.message || 'Unknown error'}`
+            });
+        }
+
+        const message = data.choices?.[0]?.message?.content;
+        if (!message) {
+            console.error('Missing response content:', data);
+            return res.status(500).json({
+                response: 'AI response not available (empty message).'
+            });
+        }
+
+        return res.status(200).json({ response: message });
 
     } catch (error) {
-        console.error('OpenAI API error:', error);
-        res.status(500).json({ error: 'Failed to generate response.' });
+        console.error('API call failed:', error);
+        return res.status(500).json({
+            response: 'Server error while calling OpenAI.'
+        });
     }
 }
