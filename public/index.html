@@ -161,4 +161,122 @@
       <label>Review Text</label>
       <textarea id="reviewText" rows="3"></textarea>
     </div>
-    <div c
+    <div class="form-group">
+      <label>Review Platform</label>
+      <select id="reviewPlatform">
+        <option value="google">Google</option>
+        <option value="yelp">Yelp</option>
+      </select>
+    </div>
+    <button class="generate-btn" onclick="generateResponse()">Generate Response</button>
+
+    <div class="loading" id="loading">⏳ Generating response...</div>
+
+    <div class="response-section" id="responseSection" style="display: none;">
+      <label>Generated Response</label>
+      <textarea class="response-output" id="responseOutput"></textarea>
+      <div class="btn-group">
+        <button class="copy-btn" onclick="copyResponse()">Copy</button>
+        <button class="copy-btn" onclick="generateResponse()">Regenerate</button>
+        <button class="copy-btn" onclick="clearForm()">Clear</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let selectedRating = 0;
+  document.querySelectorAll('.star').forEach(star => {
+    star.addEventListener('click', function () {
+      selectedRating = parseInt(this.dataset.rating);
+      updateStars();
+    });
+    star.addEventListener('mouseover', function () {
+      highlightStars(parseInt(this.dataset.rating));
+    });
+  });
+  document.querySelector('.rating-stars').addEventListener('mouseleave', updateStars);
+
+  function updateStars() {
+    document.querySelectorAll('.star').forEach((star, index) => {
+      star.classList.toggle('active', index < selectedRating);
+    });
+  }
+
+  function highlightStars(rating) {
+    document.querySelectorAll('.star').forEach((star, index) => {
+      star.classList.toggle('active', index < rating);
+    });
+  }
+
+  async function generateResponse() {
+    const businessName = document.getElementById('businessName');
+    const reviewText = document.getElementById('reviewText');
+
+    [businessName, reviewText].forEach(el => el.classList.remove('input-error'));
+
+    if (!businessName.value.trim()) {
+      businessName.classList.add('input-error');
+      alert("Please enter the business name.");
+      return;
+    }
+    if (!reviewText.value.trim()) {
+      reviewText.classList.add('input-error');
+      alert("Please enter the review text.");
+      return;
+    }
+    if (!selectedRating) {
+      alert("Please select a rating.");
+      return;
+    }
+
+    document.querySelector('.generate-btn').disabled = true;
+    document.querySelector('.generate-btn').textContent = 'Generating...';
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('responseSection').style.display = 'none';
+
+    const data = {
+      businessName: businessName.value,
+      businessType: document.getElementById('businessType').value,
+      ownerName: document.getElementById('ownerName').value,
+      responseStyle: document.getElementById('responseStyle').value,
+      businessInfo: document.getElementById('businessInfo').value,
+      customerName: document.getElementById('customerName').value,
+      reviewText: reviewText.value,
+      reviewPlatform: document.getElementById('reviewPlatform').value,
+      rating: selectedRating
+    };
+
+    try {
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const result = await res.json();
+      document.getElementById('responseOutput').value = result.response;
+    } catch (err) {
+      document.getElementById('responseOutput').value = '❌ Failed to generate response.';
+      console.error(err);
+    } finally {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('responseSection').style.display = 'block';
+      document.querySelector('.generate-btn').disabled = false;
+      document.querySelector('.generate-btn').textContent = 'Generate Response';
+    }
+  }
+
+  function copyResponse() {
+    const text = document.getElementById('responseOutput').value;
+    navigator.clipboard.writeText(text).then(() => alert("✅ Copied to clipboard!"));
+  }
+
+  function clearForm() {
+    document.querySelectorAll('input, textarea').forEach(el => el.value = '');
+    selectedRating = 0;
+    updateStars();
+    document.getElementById('responseSection').style.display = 'none';
+  }
+</script>
+</body>
+</html>
