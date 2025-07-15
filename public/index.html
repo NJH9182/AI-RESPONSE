@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Response AI Agent</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .setup-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border-left: 5px solid #3498db;
+        }
+
+        .setup-section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .review-input-section {
+            background: #fff;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .review-input-section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .rating-stars {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+
+        .star {
+            font-size: 24px;
+            color: #ddd;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .star.active {
+            color: #ffd700;
+        }
+
+        .star:hover {
+            color: #ffd700;
+        }
+
+        .generate-btn {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(46, 204, 113, 0.3);
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(46, 204, 113, 0.4);
+        }
+
+        .generate-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .response-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 30px;
+            border-left: 5px solid #27ae60;
+        }
+
+        .response-section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .response-output {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            min-height: 120px;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .copy-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background 0.3s ease;
+        }
+
+        .copy-btn:hover {
+            background: #2980b9;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #3498db;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .tips-section {
+            background: #fff3cd;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+            border-left: 5px solid #ffc107;
+        }
+
+        .tips-section h3 {
+            color: #856404;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .tips-section ul {
+            color: #856404;
+            line-height: 1.6;
+        }
+
+        .tips-section li {
+            margin-bottom: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Review Response AI Agent</h1>
+            <p>Generate professional, personalized responses to customer reviews instantly</p>
+        </div>
+
+        <div class="main-content">
+            <div class="setup-section">
+                <h2>🏢 Business Setup</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="businessName">Business Name</label>
+                        <input type="text" id="businessName" placeholder="e.g., Mario's Italian Restaurant">
+                    </div>
+                    <div class="form-group">
+                        <label for="businessType">Business Type</label>
+                        <select id="businessType">
+                            <option value="restaurant">Restaurant</option>
+                            <option value="hotel">Hotel</option>
+                            <option value="retail">Retail Store</option>
+                            <option value="salon">Salon/Spa</option>
+                            <option value="auto">Auto Service</option>
+                            <option value="healthcare">Healthcare</option>
+                            <option value="fitness">Fitness/Gym</option>
+                            <option value="professional">Professional Service</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ownerName">Owner/Manager Name</label>
+                        <input type="text" id="ownerName" placeholder="e.g., Mario">
+                    </div>
+                    <div class="form-group">
+                        <label for="responseStyle">Response Style</label>
+                        <select id="responseStyle">
+                            <option value="professional">Professional</option>
+                            <option value="friendly">Friendly & Casual</option>
+                            <option value="formal">Formal</option>
+                            <option value="warm">Warm & Personal</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="businessInfo">Additional Business Info (optional)</label>
+                    <textarea id="businessInfo" rows="3" placeholder="e.g., Family-owned since 1985, specializing in authentic Italian cuisine..."></textarea>
+                </div>
+            </div>
+
+            <div class="review-input-section">
+                <h2>📝 Customer Review</h2>
+                <div class="form-group">
+                    <label for="customerName">Customer Name</label>
+                    <input type="text" id="customerName" placeholder="e.g., Sarah M.">
+                </div>
+                <div class="form-group">
+                    <label>Rating</label>
+                    <div class="rating-stars">
+                        <span class="star" data-rating="1">★</span>
+                        <span class="star" data-rating="2">★</span>
+                        <span class="star" data-rating="3">★</span>
+                        <span class="star" data-rating="4">★</span>
+                        <span class="star" data-rating="5">★</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="reviewText">Review Text</label>
+                    <textarea id="reviewText" rows="4" placeholder="Paste the customer's review here..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="reviewPlatform">Review Platform</label>
+                    <select id="reviewPlatform">
+                        <option value="google">Google Reviews</option>
+                        <option value="yelp">Yelp</option>
+                        <option value="facebook">Facebook</option>
+                        <option value="tripadvisor">TripAdvisor</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <button class="generate-btn" onclick="generateResponse()">Generate Response</button>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Generating personalized response...</p>
+            </div>
+
+            <div class="response-section" id="responseSection" style="display: none;">
+                <h2>✨ Generated Response</h2>
+                <div class="response-output" id="responseOutput"></div>
+                <button class="copy-btn" onclick="copyResponse()">Copy Response</button>
+            </div>
+
+            <div class="tips-section">
+                <h3>💡 Best Practices for Review Responses</h3>
+                <ul>
+                    <li><strong>Respond quickly:</strong> Aim to respond within 24-48 hours</li>
+                    <li><strong>Always thank the customer:</strong> Even for negative reviews</li>
+                    <li><strong>Be specific:</strong> Reference details from their review</li>
+                    <li><strong>Keep it professional:</strong> Maintain a positive tone</li>
+                    <li><strong>Take accountability:</strong> Address issues directly for negative reviews</li>
+                    <li><strong>Invite further contact:</strong> Provide contact information for follow-up</li>
+                    <li><strong>Showcase improvements:</strong> Mention what you've done to address concerns</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedRating = 0;
+        
+        // Rating stars functionality
+        document.querySelectorAll('.star').forEach(star => {
+            star.addEventListener('click', function() {
+                selectedRating = parseInt(this.dataset.rating);
+                updateStars();
+            });
+            
+            star.addEventListener('mouseover', function() {
+                const rating = parseInt(this.dataset.rating);
+                highlightStars(rating);
+            });
+        });
+        
+        document.querySelector('.rating-stars').addEventListener('mouseleave', function() {
+            updateStars();
+        });
+        
+        function updateStars() {
+            document.querySelectorAll('.star').forEach((star, index) => {
+                if (index < selectedRating) {
+                    star.classList.add('active');
+                } else {
+                    star.classList.remove('active');
+                }
+            });
+        }
+        
+        function highlightStars(rating) {
+            document.querySelectorAll('.star').forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.add('active');
+                } else {
+                    star.classList.remove('active');
+                }
+            });
+        }
+        
+       async function generateResponse() {
+    const businessName = document.getElementById('businessName').value;
+    const businessType = document.getElementById('businessType').value;
+    const ownerName = document.getElementById('ownerName').value;
+    const responseStyle = document.getElementById('responseStyle').value;
+    const businessInfo = document.getElementById('businessInfo').value;
+    const customerName = document.getElementById('customerName').value;
+    const reviewText = document.getElementById('reviewText').value;
+    const reviewPlatform = document.getElementById('reviewPlatform').value;
+
+    if (!businessName || !reviewText || selectedRating === 0) {
+        alert('Please fill in the business name, review text, and select a rating.');
+        return;
+    }
+
+    // Show loading spinner
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('responseSection').style.display = 'none';
+
+    try {
+        const response = await fetch('/api/generate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                businessName,
+                businessType,
+                ownerName,
+                responseStyle,
+                businessInfo,
+                customerName,
+                reviewText,
+                reviewPlatform,
+                rating: selectedRating
+            })
+        });
+
+        const result = await response.json();
+        document.getElementById('responseOutput').textContent = result.response;
+    } catch (error) {
+        console.error('Error generating response:', error);
+        document.getElementById('responseOutput').textContent = 'An error occurred while generating the response.';
+    } finally {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('responseSection').style.display = 'block';
+    }
+}
+        function createResponse(data) {
+            const { businessName, businessType, ownerName, responseStyle, businessInfo, customerName, reviewText, reviewPlatform, rating } = data;
+            
+            let response = '';
+            const customerNameFormatted = customerName ? customerName : 'valued customer';
+            const ownerNameFormatted = ownerName || 'Management';
+            
+            // Greeting based on style
+            if (responseStyle === 'professional') {
+                response += `Dear ${customerNameFormatted},\n\n`;
+            } else if (responseStyle === 'friendly') {
+                response += `Hi ${customerNameFormatted}!\n\n`;
+            } else if (responseStyle === 'formal') {
+                response += `Dear ${customerNameFormatted},\n\n`;
+            } else { // warm
+                response += `Hello ${customerNameFormatted},\n\n`;
+            }
+            
+            // Response based on rating
+            if (rating >= 4) {
+                // Positive review response
+                response += `Thank you so much for taking the time to leave such a wonderful review! `;
+                
+                if (reviewText.toLowerCase().includes('food') || reviewText.toLowerCase().includes('meal')) {
+                    response += `We're thrilled that you enjoyed your dining experience with us. `;
+                } else if (reviewText.toLowerCase().includes('service')) {
+                    response += `We're delighted that our team provided you with excellent service. `;
+                } else if (reviewText.toLowerCase().includes('staff')) {
+                    response += `Our staff will be so happy to hear about your positive experience. `;
+                } else {
+                    response += `We're absolutely delighted that you had such a positive experience with us. `;
+                }
+                
+                if (rating === 5) {
+                    response += `A 5-star review means the world to us! `;
+                }
+                
+                response += `Your feedback motivates our entire team to continue delivering exceptional ${businessType === 'restaurant' ? 'dining experiences' : 'service'}.\n\n`;
+                
+                response += `We look forward to welcoming you back to ${businessName} soon!`;
+                
+            } else if (rating === 3) {
+                // Neutral review response
+                response += `Thank you for taking the time to share your feedback with us. `;
+                response += `We appreciate your honest review and are glad you chose ${businessName}. `;
+                response += `We're always looking for ways to improve our ${businessType === 'restaurant' ? 'dining experience' : 'service'}, and your comments help us do just that.\n\n`;
+                response += `We'd love the opportunity to provide you with an even better experience next time. `;
+                response += `Please don't hesitate to reach out to us directly if you have any specific suggestions or concerns.`;
+                
+            } else {
+                // Negative review response
+                response += `Thank you for bringing this to our attention, and I sincerely apologize for the experience you had at ${businessName}. `;
+                response += `This is not the level of ${businessType === 'restaurant' ? 'service and quality' : 'service'} we strive for, and we take your feedback very seriously.\n\n`;
+                
+                if (reviewText.toLowerCase().includes('wait') || reviewText.toLowerCase().includes('slow')) {
+                    response += `We understand how frustrating long wait times can be, and we're working to improve our efficiency. `;
+                } else if (reviewText.toLowerCase().includes('rude') || reviewText.toLowerCase().includes('poor service')) {
+                    response += `We are addressing the service issues you experienced with our team immediately. `;
+                } else if (reviewText.toLowerCase().includes('dirty') || reviewText.toLowerCase().includes('clean')) {
+                    response += `Cleanliness is a top priority for us, and we're taking immediate action to address this concern. `;
+                }
+                
+                response += `We would appreciate the opportunity to make this right and discuss your experience further. `;
+                response += `Please contact us directly so we can work together to resolve this matter.\n\n`;
+                response += `We hope you'll give us another chance to show you the quality experience ${businessName} is known for.`;
+            }
+            
+            // Closing
+            response += `\n\nBest regards,\n${ownerNameFormatted}\n${businessName}`;
+            
+            return response;
+        }
+        
+        function copyResponse() {
+            const responseText = document.getElementById('responseOutput').textContent;
+            navigator.clipboard.writeText(responseText).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                const originalText = btn.textContent;
+                btn.textContent = 'Copied!';
+                btn.style.background = '#27ae60';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '#3498db';
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
