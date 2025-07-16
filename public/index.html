@@ -5,140 +5,40 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Review Response AI Agent</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      padding: 20px;
+    body { font-family: sans-serif; background: #f0f2f5; padding: 20px; }
+    .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 10px; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; }
+    input, textarea, select, button {
+      width: 100%; padding: 10px; font-size: 1em; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc;
     }
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      background: white;
-      border-radius: 20px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
-    }
-    .header {
-      background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
-      color: white;
-      padding: 30px;
-      text-align: center;
-    }
-    .header h1 { font-size: 2.5em; margin-bottom: 10px; font-weight: 700; }
-    .header p { font-size: 1.1em; opacity: 0.9; }
-    .main-content { padding: 40px; }
-    .form-group { margin-bottom: 20px; }
-    label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: 600;
-      color: #2c3e50;
-    }
-    input, textarea, select {
-      width: 100%;
-      padding: 12px;
-      border: 2px solid #e0e0e0;
-      border-radius: 8px;
-      font-size: 14px;
-    }
-    .input-error { border-color: red !important; }
-    .rating-stars {
-      display: flex;
-      gap: 5px;
-      margin-bottom: 15px;
-    }
-    .star {
-      font-size: 24px;
-      color: #ddd;
-      cursor: pointer;
-      transition: color 0.2s ease;
-    }
-    .star.active, .star:hover { color: #ffd700; }
-    .generate-btn {
-      background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
-      color: white;
-      border: none;
-      padding: 15px 30px;
-      border-radius: 10px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .generate-btn:disabled {
-      background: #95a5a6;
-      cursor: not-allowed;
-    }
-    .response-section {
-      background: #f8f9fa;
-      border-radius: 15px;
-      padding: 30px;
-      margin-top: 30px;
-      border-left: 5px solid #27ae60;
-    }
-    .response-output {
-      width: 100%;
-      min-height: 120px;
-      font-size: 14px;
-      padding: 15px;
-      border: 2px solid #ccc;
-      border-radius: 10px;
-    }
-    .copy-btn {
-      background: #3498db;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 8px;
-      font-size: 14px;
-      cursor: pointer;
-      margin-top: 15px;
-    }
-    .btn-group {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-    .loading {
-      display: none;
-      text-align: center;
-      padding: 20px;
-      color: #3498db;
-    }
+    .rating-stars { display: flex; gap: 5px; margin-top: 5px; }
+    .star { font-size: 24px; color: #ccc; cursor: pointer; }
+    .star.active { color: #f5a623; }
+    #responseSection { display: none; margin-top: 20px; }
+    .btn-group { display: flex; gap: 10px; margin-top: 10px; }
+    button { cursor: pointer; }
   </style>
 </head>
 <body>
-<div class="container">
-  <div class="header">
-    <h1>🤖 Review Response AI Agent</h1>
-    <p>Generate professional, personalized responses to customer reviews instantly</p>
-  </div>
-  <div class="main-content">
-    <div class="form-group">
-      <label>Business Name</label>
-      <input type="text" id="businessName" placeholder="e.g., Mario's Italian Restaurant" />
-    </div>
-    <div class="form-group">
-      <label>Business Type</label>
+  <div class="container">
+    <h1>🧠 Review Response AI</h1>
+    <div class="form-group"><label>Business Name</label><input id="businessName" /></div>
+    <div class="form-group"><label>Business Type</label>
       <select id="businessType">
         <option value="restaurant">Restaurant</option>
         <option value="hotel">Hotel</option>
-        <option value="retail">Retail Store</option>
-        <option value="salon">Salon/Spa</option>
+        <option value="retail">Retail</option>
+        <option value="salon">Salon</option>
         <option value="auto">Auto Service</option>
         <option value="healthcare">Healthcare</option>
-        <option value="fitness">Fitness/Gym</option>
-        <option value="professional">Professional Service</option>
+        <option value="fitness">Fitness</option>
+        <option value="professional">Professional Services</option>
         <option value="other">Other</option>
       </select>
     </div>
-    <div class="form-group">
-      <label>Owner Name</label>
-      <input type="text" id="ownerName" />
-    </div>
-    <div class="form-group">
-      <label>Response Style</label>
+    <div class="form-group"><label>Owner Name</label><input id="ownerName" /></div>
+    <div class="form-group"><label>Response Style</label>
       <select id="responseStyle">
         <option value="professional">Professional</option>
         <option value="friendly">Friendly & Casual</option>
@@ -146,17 +46,24 @@
         <option value="warm">Warm & Personal</option>
       </select>
     </div>
-    <div class="form-group">
-      <label>Business Info</label>
-      <textarea id="businessInfo" rows="2"></textarea>
+    <div class="form-group"><label>Response Length</label>
+      <select id="responseLength">
+        <option value="short">Short</option>
+        <option value="normal">Normal</option>
+        <option value="detailed">Detailed</option>
+      </select>
     </div>
-    <hr />
-    <div class="form-group">
-      <label>Customer Name</label>
-      <input type="text" id="customerName" />
+    <div class="form-group"><label>Response Language</label>
+      <select id="responseLanguage">
+        <option value="English">English</option>
+        <option value="Spanish">Spanish</option>
+        <option value="French">French</option>
+        <option value="German">German</option>
+      </select>
     </div>
-    <div class="form-group">
-      <label>Rating</label>
+    <div class="form-group"><label>Business Info (optional)</label><textarea id="businessInfo"></textarea></div>
+    <div class="form-group"><label>Customer Name</label><input id="customerName" /></div>
+    <div class="form-group"><label>Review Rating</label>
       <div class="rating-stars">
         <span class="star" data-rating="1">★</span>
         <span class="star" data-rating="2">★</span>
@@ -165,113 +72,66 @@
         <span class="star" data-rating="5">★</span>
       </div>
     </div>
-    <div class="form-group">
-      <label>Review Text</label>
-      <textarea id="reviewText" rows="3"></textarea>
-    </div>
-    <div class="form-group">
-      <label>Review Platform</label>
+    <div class="form-group"><label>Review Text</label><textarea id="reviewText"></textarea></div>
+    <div class="form-group"><label>Review Platform</label>
       <select id="reviewPlatform">
-        <option value="google">Google</option>
-        <option value="yelp">Yelp</option>
+        <option value="Google">Google</option>
+        <option value="Yelp">Yelp</option>
+        <option value="TripAdvisor">TripAdvisor</option>
       </select>
     </div>
-    <button class="generate-btn" onclick="generateResponse()">Generate Response</button>
-    <div class="loading" id="loading">⏳ Generating response...</div>
-    <div class="response-section" id="responseSection" style="display: none;">
-      <label>Generated Response</label>
-      <textarea class="response-output" id="responseOutput"></textarea>
+    <button onclick="generateResponse()">Generate Response</button>
+    <div id="responseSection">
+      <h3>Generated Response</h3>
+      <textarea id="responseOutput" rows="6"></textarea>
       <div class="btn-group">
-        <button class="copy-btn" onclick="copyResponse()">Copy</button>
-        <button class="copy-btn" onclick="generateResponse()">Regenerate</button>
-        <button class="copy-btn" onclick="clearForm()">Clear</button>
+        <button onclick="copyResponse()">Copy</button>
+        <button onclick="generateResponse()">Regenerate</button>
+        <button onclick="clearForm()">Clear</button>
       </div>
     </div>
   </div>
-</div>
-<script>
-let selectedRating = 0;
-document.querySelectorAll('.star').forEach(star => {
-  star.addEventListener('click', function () {
-    selectedRating = parseInt(this.dataset.rating);
-    updateStars();
-  });
-  star.addEventListener('mouseover', function () {
-    highlightStars(parseInt(this.dataset.rating));
-  });
-});
-document.querySelector('.rating-stars').addEventListener('mouseleave', updateStars);
-function updateStars() {
-  document.querySelectorAll('.star').forEach((star, index) => {
-    star.classList.toggle('active', index < selectedRating);
-  });
-}
-function highlightStars(rating) {
-  document.querySelectorAll('.star').forEach((star, index) => {
-    star.classList.toggle('active', index < rating);
-  });
-}
-async function generateResponse() {
-  const businessName = document.getElementById('businessName');
-  const reviewText = document.getElementById('reviewText');
-  [businessName, reviewText].forEach(el => el.classList.remove('input-error'));
-  if (!businessName.value.trim()) {
-    businessName.classList.add('input-error');
-    alert("Please enter the business name.");
-    return;
-  }
-  if (!reviewText.value.trim()) {
-    reviewText.classList.add('input-error');
-    alert("Please enter the review text.");
-    return;
-  }
-  if (!selectedRating) {
-    alert("Please select a rating.");
-    return;
-  }
-  document.querySelector('.generate-btn').disabled = true;
-  document.querySelector('.generate-btn').textContent = 'Generating...';
-  document.getElementById('loading').style.display = 'block';
-  document.getElementById('responseSection').style.display = 'none';
-  const data = {
-    businessName: businessName.value,
-    businessType: document.getElementById('businessType').value,
-    ownerName: document.getElementById('ownerName').value,
-    responseStyle: document.getElementById('responseStyle').value,
-    businessInfo: document.getElementById('businessInfo').value,
-    customerName: document.getElementById('customerName').value,
-    reviewText: reviewText.value,
-    reviewPlatform: document.getElementById('reviewPlatform').value,
-    rating: selectedRating
-  };
-  try {
-    const res = await fetch('/api/generate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
+  <script>
+    let selectedRating = 0;
+    document.querySelectorAll('.star').forEach(star => {
+      star.addEventListener('click', () => {
+        selectedRating = parseInt(star.dataset.rating);
+        document.querySelectorAll('.star').forEach((s, i) => s.classList.toggle('active', i < selectedRating));
+      });
     });
-    const result = await res.json();
-    document.getElementById('responseOutput').value = result.response;
-  } catch (err) {
-    document.getElementById('responseOutput').value = '❌ Failed to generate response.';
-    console.error(err);
-  } finally {
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('responseSection').style.display = 'block';
-    document.querySelector('.generate-btn').disabled = false;
-    document.querySelector('.generate-btn').textContent = 'Generate Response';
-  }
-}
-function copyResponse() {
-  const text = document.getElementById('responseOutput').value;
-  navigator.clipboard.writeText(text).then(() => alert("✅ Copied to clipboard!"));
-}
-function clearForm() {
-  document.querySelectorAll('input, textarea').forEach(el => el.value = '');
-  selectedRating = 0;
-  updateStars();
-  document.getElementById('responseSection').style.display = 'none';
-}
-</script>
+    async function generateResponse() {
+      const data = {
+        businessName: document.getElementById('businessName').value,
+        businessType: document.getElementById('businessType').value,
+        ownerName: document.getElementById('ownerName').value,
+        responseStyle: document.getElementById('responseStyle').value,
+        responseLength: document.getElementById('responseLength').value,
+        responseLanguage: document.getElementById('responseLanguage').value,
+        businessInfo: document.getElementById('businessInfo').value,
+        customerName: document.getElementById('customerName').value,
+        reviewText: document.getElementById('reviewText').value,
+        reviewPlatform: document.getElementById('reviewPlatform').value,
+        rating: selectedRating
+      };
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const result = await res.json();
+      document.getElementById('responseOutput').value = result.response;
+      document.getElementById('responseSection').style.display = 'block';
+    }
+    function copyResponse() {
+      const text = document.getElementById('responseOutput').value;
+      navigator.clipboard.writeText(text).then(() => alert("Copied!"));
+    }
+    function clearForm() {
+      document.querySelectorAll('input, textarea').forEach(el => el.value = '');
+      selectedRating = 0;
+      document.querySelectorAll('.star').forEach(star => star.classList.remove('active'));
+      document.getElementById('responseSection').style.display = 'none';
+    }
+  </script>
 </body>
 </html>
