@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -112,7 +112,9 @@
   <script>
     const SUPABASE_URL = 'https://YOUR_PROJECT.supabase.co';
     const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY';
-    const PASSWORD = 'LINE-general-06';
+    const VIEW_PASSWORD = 'LINE-general-06';
+    const ADMIN_PASSWORD = 'review-ai-admin-2025';
+    let isAdmin = false;
     let fullData = [];
     let currentPage = 1;
     const pageSize = 10;
@@ -121,7 +123,8 @@
     function checkPassword() {
       const input = document.getElementById('passwordInput').value;
       const error = document.getElementById('errorMsg');
-      if (input === PASSWORD) {
+      if (input === VIEW_PASSWORD || input === ADMIN_PASSWORD) {
+        isAdmin = (input === ADMIN_PASSWORD);
         document.getElementById('authGate').classList.add('hidden');
         document.getElementById('historyContent').classList.remove('hidden');
         loadHistory();
@@ -179,7 +182,9 @@
           <td>${entry.platform}</td>
           <td>${entry.review_text}</td>
           <td class="response">${entry.response}</td>
-          <td><button class="delete-btn" onclick="deleteEntry('${entry.id}')">Delete</button></td>
+          <td>
+            ${isAdmin ? `<button class="delete-btn" onclick="deleteEntry('${entry.id}')">Delete</button>` : ''}
+          </td>
         `;
         tbody.appendChild(row);
       });
@@ -222,7 +227,8 @@
         headers: {
           apikey: SUPABASE_ANON_KEY,
           Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'x-admin-token': isAdmin ? ADMIN_PASSWORD : ''
         }
       });
       if (res.ok) {
@@ -239,7 +245,3 @@
   </script>
 </body>
 </html>
-
-  
-
-    
