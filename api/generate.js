@@ -72,8 +72,12 @@ Keep the length ${responseLength}.
     if (apiRes.ok && data.choices?.[0]?.message?.content) {
       return res.status(200).json({ response: data.choices[0].message.content.trim() });
     } else {
-      console.error('OpenAI API Error:', data);
-      return res.status(500).json({ error: 'Failed to generate response from OpenAI.' });
+   console.error('OpenAI API Error:', JSON.stringify(data, null, 2));
+return res.status(500).json({
+  error: data?.error?.message || 'Failed to generate response from OpenAI.',
+  details: data
+});
+;
     }
 
   } catch (error) {
