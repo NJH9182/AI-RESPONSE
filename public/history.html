@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Response History | Review Agent</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f8f9fa;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 30px;
+      background: white;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+    th, td {
+      padding: 12px;
+      border: 1px solid #ddd;
+      font-size: 14px;
+      vertical-align: top;
+    }
+    th {
+      background: #3498db;
+      color: white;
+      text-align: left;
+    }
+    tr:hover {
+      background: #f1f1f1;
+    }
+    .response {
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧾 Response History</h1>
+  <table id="historyTable">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Business</th>
+        <th>Customer</th>
+        <th>Rating</th>
+        <th>Review</th>
+        <th>Response</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const SUPABASE_URL = 'https://supabase.com/dashboard/project/dosxepbppxmtuxpvqmqi';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvc3hlcGJwcHhtdHV4cHZxbXFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI2Nzc5OTYsImV4cCI6MjA2ODI1Mzk5Nn0.nxKt3rZm87mlTE-PGSTFPV4_7Fl2gY-HNa_VA7qMnUE'; // Safe to use on frontend
+
+    async function loadHistory() {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/responses?select=*`, {
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`
+        }
+      });
+      const data = await res.json();
+      const tbody = document.querySelector('#historyTable tbody');
+
+      data.reverse().forEach(entry => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${new Date(entry.created_at).toLocaleString()}</td>
+          <td>${entry.business_name}</td>
+          <td>${entry.customer_name || ''}</td>
+          <td>${entry.rating}</td>
+          <td>${entry.review_text}</td>
+          <td class="response">${entry.response}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    loadHistory();
+  </script>
+</body>
+</html>
