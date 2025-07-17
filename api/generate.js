@@ -1,11 +1,4 @@
-Always show details
 
-Copy
-import zipfile
-
-# Final version of index.html with full styling + new language/length features
-final_styled_html = """
-<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
