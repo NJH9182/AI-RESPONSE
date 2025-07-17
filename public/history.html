@@ -1,63 +1,111 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Response History | Review Agent</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f8f9fa;
+      background: #f4f4f4;
       padding: 20px;
     }
     h1 {
       text-align: center;
-      color: #333;
+    }
+    .filter-bar {
+      margin: 20px 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    input, select {
+      padding: 8px;
+      font-size: 14px;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 30px;
       background: white;
       box-shadow: 0 0 10px rgba(0,0,0,0.05);
     }
     th, td {
-      padding: 12px;
-      border: 1px solid #ddd;
+      padding: 10px;
+      border: 1px solid #ccc;
       font-size: 14px;
-      vertical-align: top;
     }
     th {
       background: #3498db;
       color: white;
       text-align: left;
     }
-    tr:hover {
-      background: #f1f1f1;
-    }
     .response {
       white-space: pre-wrap;
     }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
-  <h1>🧾 Response History</h1>
-  <table id="historyTable">
-    <thead>
-      <tr>
-        <th>Date</th>
-        <th>Business</th>
-        <th>Customer</th>
-        <th>Rating</th>
-        <th>Review</th>
-        <th>Response</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+  <div id="authGate">
+    <h2>🔐 Enter Access Password</h2>
+    <input type="password" id="passwordInput" placeholder="Enter password" />
+    <button onclick="checkPassword()">Submit</button>
+    <p id="errorMsg" style="color:red;"></p>
+  </div>
+
+  <div id="historyContent" class="hidden">
+    <h1>🧾 Response History</h1>
+    <div class="filter-bar">
+      <input type="text" id="searchInput" placeholder="Search customer or business..." />
+      <select id="platformFilter">
+        <option value="">All Platforms</option>
+        <option value="google">Google</option>
+        <option value="yelp">Yelp</option>
+        <option value="facebook">Facebook</option>
+        <option value="tripadvisor">TripAdvisor</option>
+        <option value="other">Other</option>
+      </select>
+      <select id="ratingFilter">
+        <option value="">All Ratings</option>
+        <option value="5">5 Stars</option>
+        <option value="4">4 Stars</option>
+        <option value="3">3 Stars</option>
+        <option value="2">2 Stars</option>
+        <option value="1">1 Star</option>
+      </select>
+    </div>
+
+    <table id="historyTable">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Business</th>
+          <th>Customer</th>
+          <th>Rating</th>
+          <th>Platform</th>
+          <th>Review</th>
+          <th>Response</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 
   <script>
-    const SUPABASE_URL = 'https://supabase.com/dashboard/project/dosxepbppxmtuxpvqmqi';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvc3hlcGJwcHhtdHV4cHZxbXFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI2Nzc5OTYsImV4cCI6MjA2ODI1Mzk5Nn0.nxKt3rZm87mlTE-PGSTFPV4_7Fl2gY-HNa_VA7qMnUE'; // Safe to use on frontend
+    const SUPABASE_URL = 'https://supabase.com/dashboard/org/djksngioxxphfysexeqa';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvc3hlcGJwcHhtdHV4cHZxbXFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI2Nzc5OTYsImV4cCI6MjA2ODI1Mzk5Nn0.nxKt3rZm87mlTE-PGSTFPV4_7Fl2gY-HNa_VA7qMnUE';
+    const PASSWORD = 'LINE-general-06';
+
+    function checkPassword() {
+      const input = document.getElementById('passwordInput').value;
+      const error = document.getElementById('errorMsg');
+      if (input === PASSWORD) {
+        document.getElementById('authGate').classList.add('hidden');
+        document.getElementById('historyContent').classList.remove('hidden');
+        loadHistory();
+      } else {
+        error.textContent = 'Incorrect password.';
+      }
+    }
 
     async function loadHistory() {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/responses?select=*`, {
@@ -67,15 +115,31 @@
         }
       });
       const data = await res.json();
-      const tbody = document.querySelector('#historyTable tbody');
+      renderTable(data.reverse());
+    }
 
-      data.reverse().forEach(entry => {
+    function renderTable(data) {
+      const tbody = document.querySelector('#historyTable tbody');
+      tbody.innerHTML = '';
+      const searchVal = document.getElementById('searchInput').value.toLowerCase();
+      const platformVal = document.getElementById('platformFilter').value;
+      const ratingVal = document.getElementById('ratingFilter').value;
+
+      data.filter(entry => {
+        const matchesSearch =
+          entry.customer_name?.toLowerCase().includes(searchVal) ||
+          entry.business_name?.toLowerCase().includes(searchVal);
+        const matchesPlatform = platformVal ? entry.platform === platformVal : true;
+        const matchesRating = ratingVal ? String(entry.rating) === ratingVal : true;
+        return matchesSearch && matchesPlatform && matchesRating;
+      }).forEach(entry => {
         const row = document.createElement('tr');
         row.innerHTML = `
           <td>${new Date(entry.created_at).toLocaleString()}</td>
           <td>${entry.business_name}</td>
           <td>${entry.customer_name || ''}</td>
           <td>${entry.rating}</td>
+          <td>${entry.platform}</td>
           <td>${entry.review_text}</td>
           <td class="response">${entry.response}</td>
         `;
@@ -83,7 +147,19 @@
       });
     }
 
-    loadHistory();
+    ['searchInput', 'platformFilter', 'ratingFilter'].forEach(id => {
+      document.addEventListener('input', () => {
+        if (!document.getElementById('historyContent').classList.contains('hidden')) loadHistory();
+      });
+    });
   </script>
 </body>
 </html>
+
+
+
+
+
+  
+
+    
