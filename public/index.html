@@ -132,29 +132,40 @@
   </div>
 
   <script>
-    let selectedRating = 0;
-    document.querySelectorAll('.star').forEach(star => {
-      star.addEventListener('click', () => {
-        selectedRating = parseInt(star.dataset.rating);
-        document.querySelectorAll('.star').forEach((s, i) => s.classList.toggle('active', i < selectedRating));
-      });
+  let selectedRating = 0;
+
+  document.querySelectorAll('.star').forEach(star => {
+    star.addEventListener('click', () => {
+      selectedRating = parseInt(star.dataset.rating);
+      document.querySelectorAll('.star').forEach((s, i) =>
+        s.classList.toggle('active', i < selectedRating)
+      );
     });
+  });
 
-    async function generateResponse() {
-      const data = {
-        businessName: document.getElementById('businessName').value,
-        businessType: document.getElementById('businessType').value,
-        ownerName: document.getElementById('ownerName').value,
-        responseStyle: document.getElementById('responseStyle').value,
-        responseLength: document.getElementById('responseLength').value,
-        responseLanguage: document.getElementById('responseLanguage').value,
-        businessInfo: document.getElementById('businessInfo').value,
-        customerName: document.getElementById('customerName').value,
-        reviewText: document.getElementById('reviewText').value,
-        reviewPlatform: document.getElementById('reviewPlatform').value,
-        rating: selectedRating
-      };
+  async function generateResponse() {
+    const data = {
+      businessName: document.getElementById('businessName').value,
+      businessType: document.getElementById('businessType').value,
+      ownerName: document.getElementById('ownerName').value,
+      responseStyle: document.getElementById('responseStyle').value,
+      responseLength: document.getElementById('responseLength').value,
+      language: document.getElementById('responseLanguage').value,
+      businessInfo: document.getElementById('businessInfo').value,
+      customerName: document.getElementById('customerName').value,
+      reviewText: document.getElementById('reviewText').value,
+      reviewPlatform: document.getElementById('reviewPlatform').value,
+      rating: selectedRating
+    };
 
+    if (!data.businessName || !data.reviewText || data.rating === 0) {
+      alert('Please enter the business name, review, and rating.');
+      return;
+    }
+
+    document.getElementById('responseSection').style.display = 'none';
+
+    try {
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -162,21 +173,35 @@
       });
 
       const result = await res.json();
-      document.getElementById('responseOutput').value = result.response;
-      document.getElementById('responseSection').style.display = 'block';
+      const outputEl = document.getElementById('responseOutput');
+
+      if (res.ok && result.response) {
+        outputEl.value = result.response;
+      } else {
+        console.error('Generation failed:', result);
+        outputEl.value = result.error || 'An error occurred while generating the response.';
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      document.getElementById('responseOutput').value = 'An unexpected error occurred.';
     }
 
-    function copyResponse() {
-      const text = document.getElementById('responseOutput').value;
-      navigator.clipboard.writeText(text).then(() => alert("✅ Copied to clipboard!"));
-    }
+    document.getElementById('responseSection').style.display = 'block';
+  }
 
-    function clearForm() {
-      document.querySelectorAll('input, textarea').forEach(el => el.value = '');
-      selectedRating = 0;
-      document.querySelectorAll('.star').forEach(star => star.classList.remove('active'));
-      document.getElementById('responseSection').style.display = 'none';
-    }
-  </script>
+  function copyResponse() {
+    const text = document.getElementById('responseOutput').value;
+    navigator.clipboard.writeText(text).then(() =>
+      alert("✅ Copied to clipboard!")
+    );
+  }
+
+  function clearForm() {
+    document.querySelectorAll('input, textarea').forEach(el => (el.value = ''));
+    selectedRating = 0;
+    document.querySelectorAll('.star').forEach(star => star.classList.remove('active'));
+    document.getElementById('responseSection').style.display = 'none';
+  }
+</script>
 </body>
 </html>
