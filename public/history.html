@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Response History | Review Agent</title>
   <style>
     body {
@@ -12,13 +12,13 @@
     h1 {
       text-align: center;
     }
-    .filter-bar {
+    .filter-bar, .pagination-controls {
       margin: 20px 0;
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
     }
-    input, select {
+    input, select, button {
       padding: 8px;
       font-size: 14px;
     }
@@ -36,12 +36,23 @@
     th {
       background: #3498db;
       color: white;
-      text-align: left;
+      cursor: pointer;
     }
     .response {
       white-space: pre-wrap;
     }
     .hidden { display: none; }
+    .delete-btn {
+      background: #e74c3c;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .delete-btn:hover {
+      background: #c0392b;
+    }
   </style>
 </head>
 <body>
@@ -72,28 +83,40 @@
         <option value="2">2 Stars</option>
         <option value="1">1 Star</option>
       </select>
+      <button onclick="exportToCSV()">📥 Export CSV</button>
     </div>
 
     <table id="historyTable">
       <thead>
         <tr>
-          <th>Date</th>
-          <th>Business</th>
-          <th>Customer</th>
-          <th>Rating</th>
-          <th>Platform</th>
+          <th onclick="sortTable('created_at')">Date</th>
+          <th onclick="sortTable('business_name')">Business</th>
+          <th onclick="sortTable('customer_name')">Customer</th>
+          <th onclick="sortTable('rating')">Rating</th>
+          <th onclick="sortTable('platform')">Platform</th>
           <th>Review</th>
           <th>Response</th>
+          <th>Delete</th>
         </tr>
       </thead>
       <tbody></tbody>
     </table>
+
+    <div class="pagination-controls">
+      <button onclick="changePage(-1)">⬅ Prev</button>
+      <span id="pageInfo"></span>
+      <button onclick="changePage(1)">Next ➡</button>
+    </div>
   </div>
 
   <script>
-    const SUPABASE_URL = 'https://supabase.com/dashboard/org/djksngioxxphfysexeqa';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvc3hlcGJwcHhtdHV4cHZxbXFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI2Nzc5OTYsImV4cCI6MjA2ODI1Mzk5Nn0.nxKt3rZm87mlTE-PGSTFPV4_7Fl2gY-HNa_VA7qMnUE';
+    const SUPABASE_URL = 'https://YOUR_PROJECT.supabase.co';
+    const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY';
     const PASSWORD = 'LINE-general-06';
+    let fullData = [];
+    let currentPage = 1;
+    const pageSize = 10;
+    let currentSort = { field: 'created_at', asc: false };
 
     function checkPassword() {
       const input = document.getElementById('passwordInput').value;
@@ -114,25 +137,39 @@
           Authorization: `Bearer ${SUPABASE_ANON_KEY}`
         }
       });
-      const data = await res.json();
-      renderTable(data.reverse());
+      fullData = await res.json();
+      renderTable();
     }
 
-    function renderTable(data) {
+    function renderTable() {
       const tbody = document.querySelector('#historyTable tbody');
       tbody.innerHTML = '';
       const searchVal = document.getElementById('searchInput').value.toLowerCase();
       const platformVal = document.getElementById('platformFilter').value;
       const ratingVal = document.getElementById('ratingFilter').value;
 
-      data.filter(entry => {
+      let filtered = fullData.filter(entry => {
         const matchesSearch =
           entry.customer_name?.toLowerCase().includes(searchVal) ||
           entry.business_name?.toLowerCase().includes(searchVal);
         const matchesPlatform = platformVal ? entry.platform === platformVal : true;
         const matchesRating = ratingVal ? String(entry.rating) === ratingVal : true;
         return matchesSearch && matchesPlatform && matchesRating;
-      }).forEach(entry => {
+      });
+
+      filtered.sort((a, b) => {
+        const f = currentSort.field;
+        const valA = a[f] ?? '';
+        const valB = b[f] ?? '';
+        if (valA < valB) return currentSort.asc ? -1 : 1;
+        if (valA > valB) return currentSort.asc ? 1 : -1;
+        return 0;
+      });
+
+      const start = (currentPage - 1) * pageSize;
+      const paginated = filtered.slice(start, start + pageSize);
+
+      paginated.forEach(entry => {
         const row = document.createElement('tr');
         row.innerHTML = `
           <td>${new Date(entry.created_at).toLocaleString()}</td>
@@ -142,23 +179,66 @@
           <td>${entry.platform}</td>
           <td>${entry.review_text}</td>
           <td class="response">${entry.response}</td>
+          <td><button class="delete-btn" onclick="deleteEntry('${entry.id}')">Delete</button></td>
         `;
         tbody.appendChild(row);
       });
+
+      document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${Math.ceil(filtered.length / pageSize)}`;
+    }
+
+    function changePage(delta) {
+      currentPage += delta;
+      renderTable();
+    }
+
+    function sortTable(field) {
+      currentSort.asc = currentSort.field === field ? !currentSort.asc : true;
+      currentSort.field = field;
+      renderTable();
+    }
+
+    function exportToCSV() {
+      let csv = 'Date,Business,Customer,Rating,Platform,Review,Response\n';
+      const rows = document.querySelectorAll('#historyTable tbody tr');
+      rows.forEach(row => {
+        const cols = row.querySelectorAll('td');
+        const rowData = Array.from(cols).slice(0, 7).map(td => '"' + td.textContent.replace(/"/g, '""') + '"');
+        csv += rowData.join(',') + '\n';
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'response_history.csv';
+      link.click();
+    }
+
+    async function deleteEntry(id) {
+      const confirmDelete = confirm('Are you sure you want to delete this entry?');
+      if (!confirmDelete) return;
+
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/responses?id=eq.${id}`, {
+        method: 'DELETE',
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (res.ok) {
+        fullData = fullData.filter(e => e.id !== id);
+        renderTable();
+      } else {
+        alert('Failed to delete entry.');
+      }
     }
 
     ['searchInput', 'platformFilter', 'ratingFilter'].forEach(id => {
-      document.addEventListener('input', () => {
-        if (!document.getElementById('historyContent').classList.contains('hidden')) loadHistory();
-      });
+      document.getElementById(id).addEventListener('input', renderTable);
     });
   </script>
 </body>
 </html>
-
-
-
-
 
   
 
