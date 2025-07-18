@@ -1,5 +1,3 @@
-// /api/generate.js
-
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -84,8 +82,7 @@ Keep the length ${responseLength}.
 
     const generatedReply = data.choices[0].message.content.trim();
 
-    // Save to Supabase
-    await supabase.from('review_responses').insert({
+    const { error: insertError } = await supabase.from('review_responses').insert({
       business_name: businessName,
       customer_name: customerName,
       review_text: reviewText,
@@ -93,9 +90,14 @@ Keep the length ${responseLength}.
       rating: rating
     });
 
+    if (insertError) {
+      console.error('Supabase Insert Error:', insertError);
+      return res.status(500).json({ error: 'Failed to save response to Supabase.' });
+    }
+
     return res.status(200).json({ response: generatedReply });
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Unexpected Error:', error);
     return res.status(500).json({ error: 'An unexpected error occurred.' });
   }
 }
