@@ -1,4 +1,3 @@
-
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -37,6 +36,7 @@
       padding: 12px;
       border-bottom: 1px solid #eee;
       text-align: left;
+      vertical-align: top;
     }
     button {
       padding: 8px 12px;
@@ -52,6 +52,7 @@
       display: none;
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 </head>
 <body>
   <div class="container">
@@ -74,13 +75,12 @@
   </div>
 
   <script>
-    const SUPABASE_URL = "https://supabase.com/dashboard/org/djksngioxxphfysexeqa";
+    // ✅ Replace these with your actual project values
+    const SUPABASE_URL = "https://dosxepbppxmtuxpvqmqi.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvc3hlcGJwcHhtdHV4cHZxbXFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI2Nzc5OTYsImV4cCI6MjA2ODI1Mzk5Nn0.nxKt3rZm87mlTE-PGSTFPV4_7Fl2gY-HNa_VA7qMnUE";
     const ADMIN_TOKEN = "LINE-general-06";
 
-    const { createClient } = supabase;
-    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     let isAdmin = false;
 
     document.getElementById('password').addEventListener('change', (e) => {
@@ -95,6 +95,8 @@
 
     async function loadHistory() {
       const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+      const table = document.getElementById('historyTable');
+      table.innerHTML = '<tr><td colspan="6">Loading...</td></tr>';
 
       const { data, error } = await supabaseClient
         .from('review_responses')
@@ -103,12 +105,11 @@
 
       if (error) {
         console.error(error);
+        table.innerHTML = '<tr><td colspan="6">Failed to load history.</td></tr>';
         return;
       }
 
-      const table = document.getElementById('historyTable');
       table.innerHTML = '';
-
       data.forEach(row => {
         const text = `${row.business_name} ${row.customer_name} ${row.review_text}`.toLowerCase();
         if (!searchTerm || text.includes(searchTerm)) {
@@ -134,6 +135,7 @@
         .from('review_responses')
         .delete()
         .eq('id', id);
+
       if (error) {
         console.error(error);
         alert("Delete failed");
@@ -142,13 +144,12 @@
       }
     }
 
-    // Auto-load with stored admin token
+    // Auto-login admin if token exists
     if (localStorage.getItem('adminToken') === ADMIN_TOKEN) {
       isAdmin = true;
     }
+
     loadHistory();
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 </body>
 </html>
-
