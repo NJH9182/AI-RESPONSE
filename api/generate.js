@@ -1,5 +1,8 @@
+// /api/generate.js
+
 import { createClient } from '@supabase/supabase-js';
 
+// Initialize Supabase client
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_ANON_KEY
@@ -29,6 +32,7 @@ export default async function handler(req, res) {
   const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-3.5-turbo";
 
   if (!OPENAI_API_KEY) {
+    console.error('Missing OpenAI API Key');
     return res.status(500).json({ error: 'Missing OpenAI API key' });
   }
 
@@ -56,6 +60,7 @@ Keep the length ${responseLength}.
 `;
 
   try {
+    // Call OpenAI API
     const apiRes = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -82,22 +87,27 @@ Keep the length ${responseLength}.
 
     const generatedReply = data.choices[0].message.content.trim();
 
+    // Save response to Supabase
     const { error: insertError } = await supabase.from('review_responses').insert({
       business_name: businessName,
       customer_name: customerName,
       review_text: reviewText,
       generated_reply: generatedReply,
-      rating: rating
+      rating,
+      response_style: responseStyle,
+      language,
+      response_length: responseLength
     });
 
     if (insertError) {
-      console.error('Supabase Insert Error:', insertError);
+      console.error('Supabase Insert Error:', insertError.message);
       return res.status(500).json({ error: 'Failed to save response to Supabase.' });
     }
 
     return res.status(200).json({ response: generatedReply });
+
   } catch (error) {
-    console.error('Unexpected Error:', error);
+    console.error('Unexpected Error:', error.message || error);
     return res.status(500).json({ error: 'An unexpected error occurred.' });
   }
 }
